@@ -9,3 +9,11 @@ debug logs for this error!"*
 
 Spot Log stores logs below the level, then outputs all logs when a log above the
 level is received.
+
+## Warning
+
+`Logger` instances maintain the list of stored log entries and `Entry`
+instances use their parent `Logger` instance's list. Therefore
+there must be a separate `Logger` instance for each HTTP Request or goroutine.
+
+TODO: Optionally store entries in the Context.
