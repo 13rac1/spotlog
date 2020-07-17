@@ -44,5 +44,6 @@ func Get(ctx context.Context) (context.Context, *Logger) {
 		minLogLevel: logrus.ErrorLevel,
 	}
 	ctx = context.WithValue(ctx, loggerKey, logger)
+
 	return ctx, logger
 }

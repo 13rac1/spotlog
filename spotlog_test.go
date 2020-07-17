@@ -2,11 +2,16 @@ package spotlog_test
 
 import (
 	"bytes"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 
 	"context"
 
 	"github.com/13rac1/spotlog"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,4 +59,35 @@ func TestEntry(t *testing.T) {
 	assert.Contains(t, stdout.String(), "msg=debugmsg test=value")
 	assert.Contains(t, stdout.String(), "msg=infomsg test=value")
 	assert.Contains(t, stdout.String(), "msg=errormsg test=value")
+}
+
+func exampleHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, logger := spotlog.Get(r.Context())
+
+	// Sending to Stdout so the test runner catches the output.
+	logger.Out = os.Stdout
+	// Specify the formatter to disable the timestamp for reproducible output.
+	logger.Formatter = &logrus.TextFormatter{DisableTimestamp: true}
+
+	logger.Info("request received")
+	exampleCalculation(ctx, w, r)
+}
+
+func exampleCalculation(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	_, logger := spotlog.Get(ctx)
+	logger.Error("failed calc")
+}
+
+func ExampleLogger() {
+	ts := httptest.NewServer(http.HandlerFunc(exampleHandler))
+	defer ts.Close()
+
+	_, err := http.Get(ts.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Output:
+	// level=info msg="request received"
+	// level=error msg="failed calc"
 }
