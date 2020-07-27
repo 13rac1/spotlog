@@ -8,18 +8,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// func New() *Logger {
-// 	return &Logger{
-// 		Out:          os.Stderr,
-// 		Formatter:    new(TextFormatter),
-// 		Hooks:        make(LevelHooks),
-// 		Level:        InfoLevel,
-// 		ExitFunc:     os.Exit,
-// 		ReportCaller: false,
-// 	}
-// }
+// New creates a configured SpotLogger.
+func New() *SpotLogger {
+	logrusLogger := logrus.StandardLogger()
+	// The logrus logger is set to TraceLevel to print everything.
+	logrusLogger.Level = logrus.TraceLevel
 
-// Logger wraps logrus.Logger to add log storage.
+	return &SpotLogger{
+		Logger:      logrusLogger,
+		entries:     []storedEntry{},
+		minLogLevel: logrus.ErrorLevel,
+	}
+}
+
+// SpotLogger wraps logrus.Logger to add log storage.
 type SpotLogger struct {
 	*logrus.Logger
 	// minLogLevel is the minimum log level to output.

@@ -32,15 +32,7 @@ func Get(ctx context.Context) (context.Context, *SpotLogger) {
 		return ctx, logger
 	}
 
-	logrusLogger := logrus.StandardLogger()
-	// The logrus logger is set to TraceLevel to print everything.
-	logrusLogger.Level = logrus.TraceLevel
-
-	logger = &SpotLogger{
-		Logger:      logrusLogger,
-		entries:     []storedEntry{},
-		minLogLevel: logrus.ErrorLevel,
-	}
+	logger = New()
 	ctx = context.WithValue(ctx, loggerKey, logger)
 
 	return ctx, logger
