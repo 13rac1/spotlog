@@ -25,20 +25,18 @@ type storedEntry struct {
 }
 
 // Get returns the logger in the context or creates one.
-func Get(ctx context.Context) (context.Context, *Logger) {
-	logger, ok := ctx.Value(loggerKey).(*Logger)
+func Get(ctx context.Context) (context.Context, *SpotLogger) {
+	logger, ok := ctx.Value(loggerKey).(*SpotLogger)
 
 	if ok {
 		return ctx, logger
 	}
 
-	logrusLogger := logrus.New()
+	logrusLogger := logrus.StandardLogger()
 	// The logrus logger is set to TraceLevel to print everything.
 	logrusLogger.Level = logrus.TraceLevel
 
-	// TODO: Is there a way to allow a global Logger instance and store the
-	// entries in the Context?
-	logger = &Logger{
+	logger = &SpotLogger{
 		Logger:      logrusLogger,
 		entries:     []storedEntry{},
 		minLogLevel: logrus.ErrorLevel,
@@ -46,4 +44,9 @@ func Get(ctx context.Context) (context.Context, *Logger) {
 	ctx = context.WithValue(ctx, loggerKey, logger)
 
 	return ctx, logger
+}
+
+// Set the logger in the context.
+func Set(ctx context.Context, logger *SpotLogger) context.Context {
+	return context.WithValue(ctx, loggerKey, logger)
 }

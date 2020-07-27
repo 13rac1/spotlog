@@ -10,10 +10,10 @@ import (
 
 type Entry struct {
 	*logrus.Entry
-	Logger *Logger
+	Logger *SpotLogger
 }
 
-func NewEntry(logger *Logger) *Entry {
+func NewEntry(logger *SpotLogger) *Entry {
 	return &Entry{
 		Entry:  logrus.NewEntry(logger.Logger),
 		Logger: logger,
@@ -58,7 +58,6 @@ func (e Entry) log(method printType, level logrus.Level, format string, args ...
 
 	if e.Logger.alwaysLog(level) {
 		// Found an important log, print the stored log entries.
-		// TODO: Performance: - re-use the logrus.Entry instance.
 		for _, entry := range e.Logger.entries {
 			switch method {
 			case printLog:
@@ -72,7 +71,7 @@ func (e Entry) log(method printType, level logrus.Level, format string, args ...
 
 		// Clear the list of output entries.
 		e.Logger.entries = nil
-		// Then print the actual "important" log e.
+		// Then print the actual "important" log.
 		e.Entry.Log(level, args...)
 	} else {
 		e.Logger.entries = append(e.Logger.entries, storedEntry{method, level, format, args})

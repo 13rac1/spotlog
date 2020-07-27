@@ -20,7 +20,7 @@ import (
 // }
 
 // Logger wraps logrus.Logger to add log storage.
-type Logger struct {
+type SpotLogger struct {
 	*logrus.Logger
 	// minLogLevel is the minimum log level to output.
 	minLogLevel logrus.Level
@@ -29,12 +29,12 @@ type Logger struct {
 	entriesLock sync.Mutex
 }
 
-func (l *Logger) alwaysLog(level logrus.Level) bool {
+func (l *SpotLogger) alwaysLog(level logrus.Level) bool {
 	// Levels have lower values the higher their priority is.
 	return level <= l.minLogLevel
 }
 
-func (l *Logger) newEntry() *Entry {
+func (l *SpotLogger) newEntry() *Entry {
 	// TODO: Use Pool
 	// entry, ok := l.entryPool.Get().(*Entry)
 	// if ok {
@@ -43,7 +43,7 @@ func (l *Logger) newEntry() *Entry {
 	return NewEntry(l)
 }
 
-func (l *Logger) releaseEntry(entry *Entry) {
+func (l *SpotLogger) releaseEntry(entry *Entry) {
 	//entry.Data = map[string]interface{}{}
 	//l.entryPool.Put(entry)
 }
@@ -52,7 +52,7 @@ func (l *Logger) releaseEntry(entry *Entry) {
 // Debug, Print, Info, Warn, Error, Fatal or Panic must be then applied to
 // this new returned entry.
 // If you want multiple fields, use `WithFields`.
-func (l *Logger) WithField(key string, value interface{}) *Entry {
+func (l *SpotLogger) WithField(key string, value interface{}) *Entry {
 	entry := l.newEntry()
 	defer l.releaseEntry(entry)
 	return entry.WithField(key, value)
@@ -60,7 +60,7 @@ func (l *Logger) WithField(key string, value interface{}) *Entry {
 
 // Adds a struct of fields to the log entry. All it does is call `WithField` for
 // each `Field`.
-func (l *Logger) WithFields(fields logrus.Fields) *Entry {
+func (l *SpotLogger) WithFields(fields logrus.Fields) *Entry {
 	entry := l.newEntry()
 	defer l.releaseEntry(entry)
 	return entry.WithFields(fields)
@@ -68,33 +68,32 @@ func (l *Logger) WithFields(fields logrus.Fields) *Entry {
 
 // Add an error as single field to the log entry.  All it does is call
 // `WithError` for the given `error`.
-func (l *Logger) WithError(err error) *Entry {
+func (l *SpotLogger) WithError(err error) *Entry {
 	entry := l.newEntry()
 	defer l.releaseEntry(entry)
 	return entry.WithError(err)
 }
 
 // Add a context to the log entry.
-func (l *Logger) WithContext(ctx context.Context) *Entry {
+func (l *SpotLogger) WithContext(ctx context.Context) *Entry {
 	entry := l.newEntry()
 	defer l.releaseEntry(entry)
 	return entry.WithContext(ctx)
 }
 
 // Overrides the time of the log entry.
-func (l *Logger) WithTime(t time.Time) *Entry {
+func (l *SpotLogger) WithTime(t time.Time) *Entry {
 	entry := l.newEntry()
 	defer l.releaseEntry(entry)
 	return entry.WithTime(t)
 }
 
-func (l *Logger) log(method printType, level logrus.Level, format string, args ...interface{}) {
+func (l *SpotLogger) log(method printType, level logrus.Level, format string, args ...interface{}) {
 	l.entriesLock.Lock()
 	defer l.entriesLock.Unlock()
 
 	if l.alwaysLog(level) {
 		// Found an important log, print the stored log entries.
-		// TODO: Performance: - re-use the logrus.Entry instance.
 		for _, entry := range l.entries {
 			switch method {
 			case printLog:
@@ -115,125 +114,125 @@ func (l *Logger) log(method printType, level logrus.Level, format string, args .
 	}
 }
 
-func (l *Logger) Logf(level logrus.Level, format string, args ...interface{}) {
+func (l *SpotLogger) Logf(level logrus.Level, format string, args ...interface{}) {
 	l.log(printLogf, level, format, args...)
 }
 
-func (l *Logger) Tracef(format string, args ...interface{}) {
+func (l *SpotLogger) Tracef(format string, args ...interface{}) {
 	l.Logf(logrus.TraceLevel, format, args...)
 }
 
-func (l *Logger) Debugf(format string, args ...interface{}) {
+func (l *SpotLogger) Debugf(format string, args ...interface{}) {
 	l.Logf(logrus.DebugLevel, format, args...)
 }
 
-func (l *Logger) Infof(format string, args ...interface{}) {
+func (l *SpotLogger) Infof(format string, args ...interface{}) {
 	l.Logf(logrus.InfoLevel, format, args...)
 }
 
-func (l *Logger) Printf(format string, args ...interface{}) {
+func (l *SpotLogger) Printf(format string, args ...interface{}) {
 	l.Logf(logrus.InfoLevel, format, args...)
 }
 
-func (l *Logger) Warnf(format string, args ...interface{}) {
+func (l *SpotLogger) Warnf(format string, args ...interface{}) {
 	l.Logf(logrus.WarnLevel, format, args...)
 }
 
-func (l *Logger) Warningf(format string, args ...interface{}) {
+func (l *SpotLogger) Warningf(format string, args ...interface{}) {
 	l.Warnf(format, args...)
 }
 
-func (l *Logger) Errorf(format string, args ...interface{}) {
+func (l *SpotLogger) Errorf(format string, args ...interface{}) {
 	l.Logf(logrus.ErrorLevel, format, args...)
 }
 
-func (l *Logger) Fatalf(format string, args ...interface{}) {
+func (l *SpotLogger) Fatalf(format string, args ...interface{}) {
 	l.Logf(logrus.FatalLevel, format, args...)
 	l.Exit(1)
 }
 
-func (l *Logger) Panicf(format string, args ...interface{}) {
+func (l *SpotLogger) Panicf(format string, args ...interface{}) {
 	l.Logf(logrus.PanicLevel, format, args...)
 }
 
-func (l *Logger) Log(level logrus.Level, args ...interface{}) {
+func (l *SpotLogger) Log(level logrus.Level, args ...interface{}) {
 	l.log(printLog, level, "", args...)
 }
 
-func (l *Logger) Trace(args ...interface{}) {
+func (l *SpotLogger) Trace(args ...interface{}) {
 	l.Log(logrus.TraceLevel, args...)
 }
 
-func (l *Logger) Debug(args ...interface{}) {
+func (l *SpotLogger) Debug(args ...interface{}) {
 	l.Log(logrus.DebugLevel, args...)
 }
 
-func (l *Logger) Info(args ...interface{}) {
+func (l *SpotLogger) Info(args ...interface{}) {
 	l.Log(logrus.InfoLevel, args...)
 }
 
-func (l *Logger) Print(args ...interface{}) {
+func (l *SpotLogger) Print(args ...interface{}) {
 	l.Log(logrus.InfoLevel, args...)
 }
 
-func (l *Logger) Warn(args ...interface{}) {
+func (l *SpotLogger) Warn(args ...interface{}) {
 	l.Log(logrus.WarnLevel, args...)
 }
 
-func (l *Logger) Warning(args ...interface{}) {
+func (l *SpotLogger) Warning(args ...interface{}) {
 	l.Warn(args...)
 }
 
-func (l *Logger) Error(args ...interface{}) {
+func (l *SpotLogger) Error(args ...interface{}) {
 	l.Log(logrus.ErrorLevel, args...)
 }
 
-func (l *Logger) Fatal(args ...interface{}) {
+func (l *SpotLogger) Fatal(args ...interface{}) {
 	l.Log(logrus.FatalLevel, args...)
 	l.Exit(1)
 }
 
-func (l *Logger) Panic(args ...interface{}) {
+func (l *SpotLogger) Panic(args ...interface{}) {
 	l.Log(logrus.PanicLevel, args...)
 }
 
-func (l *Logger) Logln(level logrus.Level, args ...interface{}) {
+func (l *SpotLogger) Logln(level logrus.Level, args ...interface{}) {
 	l.log(printLogln, level, "", args...)
 }
 
-func (l *Logger) Traceln(args ...interface{}) {
+func (l *SpotLogger) Traceln(args ...interface{}) {
 	l.Logln(logrus.TraceLevel, args...)
 }
 
-func (l *Logger) Debugln(args ...interface{}) {
+func (l *SpotLogger) Debugln(args ...interface{}) {
 	l.Logln(logrus.DebugLevel, args...)
 }
 
-func (l *Logger) Infoln(args ...interface{}) {
+func (l *SpotLogger) Infoln(args ...interface{}) {
 	l.Logln(logrus.InfoLevel, args...)
 }
 
-func (l *Logger) Println(args ...interface{}) {
+func (l *SpotLogger) Println(args ...interface{}) {
 	l.Logln(logrus.InfoLevel, args...)
 }
 
-func (l *Logger) Warnln(args ...interface{}) {
+func (l *SpotLogger) Warnln(args ...interface{}) {
 	l.Logln(logrus.WarnLevel, args...)
 }
 
-func (l *Logger) Warningln(args ...interface{}) {
+func (l *SpotLogger) Warningln(args ...interface{}) {
 	l.Warnln(args...)
 }
 
-func (l *Logger) Errorln(args ...interface{}) {
+func (l *SpotLogger) Errorln(args ...interface{}) {
 	l.Logln(logrus.ErrorLevel, args...)
 }
 
-func (l *Logger) Fatalln(args ...interface{}) {
+func (l *SpotLogger) Fatalln(args ...interface{}) {
 	l.Logln(logrus.FatalLevel, args...)
 	l.Exit(1)
 }
 
-func (l *Logger) Panicln(args ...interface{}) {
+func (l *SpotLogger) Panicln(args ...interface{}) {
 	l.Logln(logrus.PanicLevel, args...)
 }
