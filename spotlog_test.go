@@ -64,9 +64,11 @@ func TestEntry(t *testing.T) {
 func exampleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, logger := spotlog.Get(r.Context())
 
-	// Sending to Stdout so the test runner catches the output.
+	// Needed for testable example only - Sending to Stdout so the test runner
+	// catches the output.
 	logger.Out = os.Stdout
-	// Specify the formatter to disable the timestamp for reproducible output.
+	// Needed for testable example only - Specify the formatter to disable the
+	// timestamp for reproducible output.
 	logger.Formatter = &logrus.TextFormatter{DisableTimestamp: true}
 
 	logger.Info("request received")
@@ -76,6 +78,7 @@ func exampleHandler(w http.ResponseWriter, r *http.Request) {
 func exampleCalculation(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	_, logger := spotlog.Get(ctx)
 	logger.Error("failed calc")
+	w.WriteHeader(http.StatusInternalServerError)
 }
 
 func ExampleLogger() {
