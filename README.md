@@ -20,7 +20,7 @@ Get it from the `context` and use like any other logger.
 ```go
 func passingCalc(ctx context.Context, w http.ResponseWriter) {
 	_, logger := spotlog.Get(ctx)
-	logger.Error("passed calc")
+	logger.Debug("passed calc")
 	w.WriteHeader(http.StatusOK)
 }
 
